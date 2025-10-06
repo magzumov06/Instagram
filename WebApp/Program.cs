@@ -43,6 +43,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IPostTagService, PostTagService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
 
 builder.Services.AddHttpContextAccessor();
 //Identity

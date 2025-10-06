@@ -35,4 +35,11 @@ public class PostController(IPostService service) : ControllerBase
         var res = await service.GetPost(id);
         return Ok(res);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetPosts()
+    {
+        var res = await service.GetPosts();
+        return Ok(res);
+    }
 }

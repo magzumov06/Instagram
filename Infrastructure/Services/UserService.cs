@@ -83,6 +83,7 @@ public class UserService(
                 Age = getUser.Age,
                 PhoneNumber = getUser.PhoneNumber,
                 AvatarUrl = getUser.AvatarUrl,
+                FollowingCount = getUser.FollowingCount,
                 CreatedAt = getUser.CreatedAt,
                 UpdateAt = getUser.UpdateAt
             };
@@ -144,6 +145,7 @@ public class UserService(
                 Age = x.Age,
                 PhoneNumber = x.PhoneNumber,
                 Email = x.Email,
+                FollowingCount = x.FollowingCount,
                 AvatarUrl = x.AvatarUrl,
                 CreatedAt = x.CreatedAt,
                 UpdateAt = x.UpdateAt

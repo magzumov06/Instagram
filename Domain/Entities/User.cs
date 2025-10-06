@@ -20,6 +20,7 @@ public class User :  IdentityUser<int>
     public string? Address { get; set; }
     public string? AvatarUrl { get; set; }
     public bool IsDeleted { get; set; }
+    public int FollowingCount { get; set; }
     public DateTime CreatedAt { get; set; } 
     public DateTime UpdateAt { get; set; }
     public List<Post>? Posts { get; set; }

@@ -9,6 +9,7 @@ public class GetUserDto
     public int Age { get; set; }
     public string PhoneNumber { get; set; }
     public string Email { get; set; }
+    public int  FollowingCount { get; set; }
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdateAt { get; set; }

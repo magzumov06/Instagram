@@ -90,4 +90,27 @@ public class LikeService(DataContext context) : ILikeService
             return new Responce<GetLikeDto>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
+
+    public async Task<Responce<List<GetLikeDto>>> GetLikes()
+    {
+        try
+        {
+            Log.Information("Getting Likes");
+            var likes = await context.Likes.ToListAsync();
+            if(likes.Count == 0) return new Responce<List<GetLikeDto>>(HttpStatusCode.NotFound,"Like not found");
+            var dtos = likes.Select(x => new GetLikeDto()
+            {
+                Id = x.Id,
+                PostId = x.PostId,
+                UserId = x.UserId,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            }).ToList();
+            return new Responce<List<GetLikeDto>>(dtos);
+        }
+        catch (Exception e)
+        {
+            return new Responce<List<GetLikeDto>>(HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
 }

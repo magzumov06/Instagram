@@ -27,4 +27,10 @@ public class LikeController(ILikeService service) : ControllerBase
         var res = await service.GetLike(id);
         return Ok(res);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetLikes()
+    {
+        var res = await service.GetLikes();
+        return Ok(res);
+    }
 }
