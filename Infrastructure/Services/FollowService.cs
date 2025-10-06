@@ -44,9 +44,10 @@ public class FollowService(DataContext context) :  IFollowService
         try
         {
             Log.Information("DeleteFollow");
-            var follow = await context.Follows.FirstOrDefaultAsync(x => x.Id == id);
+            var follow = await context.Follows.Include(x=>x.Following).FirstOrDefaultAsync(x => x.Id == id);
             if (follow == null) return new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
             context.Follows.Remove(follow);
+            follow.Following.FollowingCount -= 1;
             var res = await context.SaveChangesAsync();
             return res > 0
                 ? new Responce<string>(HttpStatusCode.OK, "Follow deleted")
