@@ -110,6 +110,7 @@ public class LikeService(DataContext context) : ILikeService
         }
         catch (Exception e)
         {
+            Log.Error("Error in GetLikes");
             return new Responce<List<GetLikeDto>>(HttpStatusCode.InternalServerError, e.Message);
         }
     }

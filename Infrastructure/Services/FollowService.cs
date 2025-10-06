@@ -15,6 +15,7 @@ public class FollowService(DataContext context) :  IFollowService
     {
         try
         {
+            Log.Information("Creating Follow");
             var exiting = await context.Follows.Include(x=>x.Following).FirstOrDefaultAsync(x=>x.FollowingId == follow.FollowingId && x.FollowerId == follow.FollowerId);
             if(exiting  !=  null) return new Responce<string>(HttpStatusCode.BadRequest,"You allready follow this user");
             var following = new Follow
@@ -33,6 +34,7 @@ public class FollowService(DataContext context) :  IFollowService
         }
         catch (Exception e)
         {
+            Log.Error("Error in CreateFollow");
             return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
@@ -41,6 +43,7 @@ public class FollowService(DataContext context) :  IFollowService
     {
         try
         {
+            Log.Information("DeleteFollow");
             var follow = await context.Follows.FirstOrDefaultAsync(x => x.Id == id);
             if (follow == null) return new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
             context.Follows.Remove(follow);
@@ -51,6 +54,7 @@ public class FollowService(DataContext context) :  IFollowService
         }
         catch (Exception e)
         {
+            Log.Error("Error in DeleteFollow");
             return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
@@ -59,6 +63,7 @@ public class FollowService(DataContext context) :  IFollowService
     {
         try
         {
+            Log.Information("Getting follow by id");
             var follow = await context.Follows.FirstOrDefaultAsync(x => x.Id == id);
             if (follow == null) return new Responce<GetFollowDto>(HttpStatusCode.NotFound, "Follow not found");
             var dto = new GetFollowDto
@@ -73,6 +78,7 @@ public class FollowService(DataContext context) :  IFollowService
         }
         catch (Exception e)
         {
+            Log.Error("Error in GetFollowById");
             return new Responce<GetFollowDto>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
