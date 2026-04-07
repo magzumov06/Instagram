@@ -11,54 +11,74 @@ namespace Infrastructure.Services;
 
 public class FollowService(DataContext context) :  IFollowService
 {
-    public async Task<Responce<string>> CreateFollow(CreateFollowDto follow)
+   public async Task<Responce<string>> CreateFollow(CreateFollowDto follow)
+{
+    await using var transaction = await context.Database.BeginTransactionAsync();
+    try
     {
-        try
-        {
-            Log.Information("Creating Follow");
-            var exiting = await context.Follows.Include(x=>x.Following).FirstOrDefaultAsync(x=>x.FollowingId == follow.FollowingId && x.FollowerId == follow.FollowerId);
-            if(exiting  !=  null) return new Responce<string>(HttpStatusCode.BadRequest,"You allready follow this user");
-            var following = new Follow
-            {
-                FollowingId = follow.FollowingId,
-                FollowerId = follow.FollowerId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-            };
-            exiting.Following.FollowingCount += 1;
-            await context.Follows.AddAsync(following);
-            var res = await context.SaveChangesAsync();
-            return res > 0
-                ? new Responce<string>(HttpStatusCode.OK, "Follow added")
-                : new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
-        }
-        catch (Exception e)
-        {
-            Log.Error("Error in CreateFollow");
-            return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
-        }
-    }
+        Log.Information("Creating Follow");
+        var userToFollow = await context.Users.FirstOrDefaultAsync(u => u.Id == follow.FollowingId);
+        if (userToFollow == null)
+            return new Responce<string>(HttpStatusCode.NotFound, "User to follow not found");
 
-    public async Task<Responce<string>> DeleteFollow(int id)
-    {
-        try
+        var existingFollow = await context.Follows
+            .FirstOrDefaultAsync(f => f.FollowingId == follow.FollowingId && f.FollowerId == follow.FollowerId);
+        if (existingFollow != null)
+            return new Responce<string>(HttpStatusCode.BadRequest, "You already follow this user");
+
+        var newFollow = new Follow
         {
-            Log.Information("DeleteFollow");
-            var follow = await context.Follows.Include(x=>x.Following).FirstOrDefaultAsync(x => x.Id == id);
-            if (follow == null) return new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
-            context.Follows.Remove(follow);
-            follow.Following.FollowingCount -= 1;
-            var res = await context.SaveChangesAsync();
-            return res > 0
-                ? new Responce<string>(HttpStatusCode.OK, "Follow deleted")
-                : new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
-        }
-        catch (Exception e)
-        {
-            Log.Error("Error in DeleteFollow");
-            return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
-        }
+            FollowingId = follow.FollowingId,
+            FollowerId = follow.FollowerId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        await context.Follows.AddAsync(newFollow);
+
+        await context.Database.ExecuteSqlRawAsync(
+            "UPDATE Users SET FollowingCount = FollowingCount + 1 WHERE Id = {0}", userToFollow.Id);
+
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return new Responce<string>(HttpStatusCode.OK, "Follow added");
     }
+    catch (Exception e)
+    {
+        await transaction.RollbackAsync();
+        Log.Error("Error in CreateFollow: {Message}", e.Message);
+        return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
+    }
+}
+
+public async Task<Responce<string>> DeleteFollow(int id)
+{
+    await using var transaction = await context.Database.BeginTransactionAsync();
+    try
+    {
+        Log.Information("Deleting Follow");
+
+        var follow = await context.Follows.FirstOrDefaultAsync(f => f.Id == id);
+        if (follow == null)
+            return new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
+
+        context.Follows.Remove(follow);
+
+        await context.Database.ExecuteSqlRawAsync(
+            "UPDATE Users SET FollowingCount = FollowingCount - 1 WHERE Id = {0}", follow.FollowingId);
+
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return new Responce<string>(HttpStatusCode.OK, "Follow deleted");
+    }
+    catch (Exception e)
+    {
+        await transaction.RollbackAsync();
+        Log.Error("Error in DeleteFollow: {Message}", e.Message);
+        return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
+    }
+}
 
     public async Task<Responce<GetFollowDto>> GetFollow(int id)
     {
