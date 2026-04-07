@@ -5,8 +5,8 @@ namespace Infrastructure.Interfaces;
 
 public interface ICommentService
 {
-    Task<Responce<string>> CreateComment (CreateCommentDto dto);
-    Task<Responce<string>> DeleteComment (int id);
-    Task<Responce<string>> UpdateComment (UpdateCommentDto dto);
-    Task<Responce<GetCommentDto>> GetComment(int id);
+    Task<Responce<string>> CreateComment (CreateCommentDto dto, int userId);
+    Task<Responce<string>> DeleteComment (int id, int userId);
+    Task<Responce<string>> UpdateComment (UpdateCommentDto dto, int userId);
+    Task<Responce<GetCommentDto>> GetComment(int id, int userId);
 }

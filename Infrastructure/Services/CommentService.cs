@@ -11,64 +11,75 @@ namespace Infrastructure.Services;
 
 public class CommentService(DataContext context) : ICommentService
 {
-    public async Task<Responce<string>> CreateComment(CreateCommentDto dto)
+    public async Task<Responce<string>> CreateComment(CreateCommentDto dto, int userId)
     {
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
-            Log.Information("CreateComment");
-            var post = await context.Posts.FirstOrDefaultAsync(x=>x.Id == dto.PostId);
-            if (post == null) return new Responce<string>(HttpStatusCode.NotFound,"Post not found");
+            var post = await context.Posts.FirstOrDefaultAsync(x => x.Id == dto.PostId);
+            if (post == null)
+                return new Responce<string>(HttpStatusCode.NotFound, "Post not found");
+
             var comment = new Comment
             {
                 PostId = dto.PostId,
-                UserId = dto.UserId,
+                UserId = userId,
                 Content = dto.Content,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            post.CommentCount += 1;
+
             await context.Comments.AddAsync(comment);
-            var res= await context.SaveChangesAsync();
-            return res > 0
-                ? new Responce<string>(HttpStatusCode.OK,"Comment created")
-                : new Responce<string>(HttpStatusCode.BadRequest,"Comment not created");
+
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Posts SET CommentCount = CommentCount + 1 WHERE Id = {0}", post.Id);
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return new Responce<string>(HttpStatusCode.OK, "Comment created");
         }
         catch (Exception e)
         {
-            Log.Error("Error in CreateComment");
+            await transaction.RollbackAsync();
             return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
 
-    public async Task<Responce<string>> DeleteComment(int id)
+    public async Task<Responce<string>> DeleteComment(int id, int userId)
     {
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
-            Log.Information("DeleteComment");
             var comment = await context.Comments
-                .Include(x=>x.Post)
-                .FirstOrDefaultAsync(x => x.Id == id);
-            if (comment == null) return new Responce<string>(HttpStatusCode.NotFound,"Comment not found");
+                .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (comment == null)
+                return new Responce<string>(HttpStatusCode.NotFound, "Comment not found");
+
             context.Comments.Remove(comment);
-            comment.Post.CommentCount -= 1;
-            var res = await context.SaveChangesAsync();
-            return res > 0
-                ? new Responce<string>(HttpStatusCode.OK,"Comment deleted")
-                : new Responce<string>(HttpStatusCode.BadRequest,"Comment not deleted");
+
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Posts SET CommentCount = CommentCount - 1 WHERE Id = {0}", comment.PostId);
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return new Responce<string>(HttpStatusCode.OK, "Comment deleted");
         }
         catch (Exception e)
         {
-            Log.Error("Error in DeleteComment");
+            await transaction.RollbackAsync();
             return new Responce<string>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
 
-    public async Task<Responce<string>> UpdateComment(UpdateCommentDto dto)
+    public async Task<Responce<string>> UpdateComment(UpdateCommentDto dto, int userId)
     {
         try
         {
             Log.Information("UpdateComment");
-            var comment = await context.Comments.FirstOrDefaultAsync(x => x.Id == dto.Id);
+            var comment = await context.Comments.FirstOrDefaultAsync(x => x.Id == dto.Id && x.UserId == userId);
             if (comment == null) return new Responce<string>(HttpStatusCode.NotFound,"Comment not found");
             comment.Content = dto.Content;
             comment.UpdatedAt = DateTime.UtcNow;
@@ -83,12 +94,12 @@ public class CommentService(DataContext context) : ICommentService
         }
     }
 
-    public async Task<Responce<GetCommentDto>> GetComment(int id)
+    public async Task<Responce<GetCommentDto>> GetComment(int id, int  userId)
     {
         try
         {
             Log.Information("GetComment");
-            var comment = await context.Comments.FirstOrDefaultAsync(x => x.Id == id);
+            var comment = await context.Comments.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (comment == null) return new Responce<GetCommentDto>(HttpStatusCode.NotFound,"Comment not found");
             var dto = new GetCommentDto
             {
@@ -104,8 +115,7 @@ public class CommentService(DataContext context) : ICommentService
         catch (Exception e)
         {
             Log.Error("Error in GetComment");
-            Console.WriteLine(e);
-            throw;
+            return new Responce<GetCommentDto>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
 }

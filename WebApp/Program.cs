@@ -1,14 +1,11 @@
-using System.Text;
 using Domain.DTOs.EmailDto;
 using Domain.Entities;
 using Infrastructure.Data;
 using Infrastructure.Data.Seeder;
 using Infrastructure.ExtensionMethod;
 using Infrastructure.FileStorage;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

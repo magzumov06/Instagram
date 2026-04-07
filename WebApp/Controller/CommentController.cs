@@ -1,4 +1,5 @@
-﻿using Domain.DTOs.CommentDto;
+﻿using System.Security.Claims;
+using Domain.DTOs.CommentDto;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,29 +11,55 @@ public class CommentController(ICommentService service) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateCommentAsync(CreateCommentDto dto)
     {
-        var res = await service.CreateComment(dto);
-        return Ok(res);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        var res = await service.CreateComment(dto,  userId);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpPut]
     public async Task<IActionResult> UpdateCommentAsync(UpdateCommentDto dto)
     {
-        var res = await service.UpdateComment(dto);
-        return Ok(res);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        var res = await service.UpdateComment(dto, userId);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteCommentAsync(int id)
     {
-        var res = await service.DeleteComment(id);
-        return Ok(res);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.DeleteComment(id,userId);
+        return StatusCode(res.StatusCode, res);
     }
     
     [HttpGet("id")]
     public async Task<IActionResult> GetCommentAsync(int id)
     {
-        var res = await service.GetComment(id);
-        return Ok(res);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.GetComment(id,userId);
+        return StatusCode(res.StatusCode, res);
     }
     
 

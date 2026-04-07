@@ -11,21 +11,21 @@ public class PostTagController(IPostTagService service) : ControllerBase
     public async Task<IActionResult> Create(CreatePostTag postTag)
     {
         var res = await service.CreatePostTag(postTag);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpDelete]
     public async Task<IActionResult> Delete(int id)
     {
         var res = await service.DeletePostTag(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
         var res = await service.GetPostTag(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
 }

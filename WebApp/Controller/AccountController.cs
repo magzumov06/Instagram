@@ -11,13 +11,13 @@ public class AccountController(IAccountService service) : ControllerBase
     public async Task<IActionResult> Register([FromForm] Register register)
     {
         var res = await service.Register(register);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpPost("Login")]
     public async Task<IActionResult> Login(Login login)
     {
         var res =  await service.Login(login);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 }

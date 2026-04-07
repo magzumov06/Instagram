@@ -11,27 +11,27 @@ public class TagController(ITagService service) :  ControllerBase
     public async Task<IActionResult> CreateTag(CreateTagDto dto)
     {
         var res = await service.CreateTagAsync(dto);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpPut]
     public async Task<IActionResult> UpdateTag(UpdateTagDto dto)
     {
         var res = await service.UpdateTagAsync(dto);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteTag(int id)
     {
         var res = await service.DeleteTagAsync(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTag(int id)
     {
         var res = await service.GetTagAsync(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 }

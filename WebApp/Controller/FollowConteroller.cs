@@ -12,28 +12,28 @@ public class FollowConteroller(IFollowService service) : ControllerBase
     public async Task<IActionResult> CreateFollow(CreateFollowDto dto)
     {
         var res = await service.CreateFollow(dto);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteFollow(int id)
     {
         var res = await service.DeleteFollow(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetFollow(int id)
     {
         var res = await service.GetFollow(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
     
     [HttpGet]
     public async Task<IActionResult> GetFollows()
     {
         var res = await service.GetFollows();
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
     
 }

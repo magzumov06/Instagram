@@ -13,21 +13,21 @@ public class UserController(IUserService service) : ControllerBase
     public async Task<IActionResult> Put([FromForm] UpdateUserDto updateUserDto)
     {
         var res = await service.UpdateUser(updateUserDto);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
     
     [HttpDelete]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var res = await service.DeleteUser(id);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetUsers([FromQuery] UserFilter filter)
     {
         var res = await service.GetUsers(filter);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet("{id}")]
