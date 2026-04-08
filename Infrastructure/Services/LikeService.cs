@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Domain.DTOs.LikeDto;
 using Domain.Entities;
+using Domain.Filters;
 using Domain.Responces;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
@@ -11,12 +12,13 @@ namespace Infrastructure.Services;
 
 public class LikeService(DataContext context) : ILikeService
 {
-    public async Task<Responce<string>> CreateLike(CreateLikeDto dto)
+    public async Task<Responce<string>> CreateLike(CreateLikeDto dto, int userId)
     {
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             Log.Information("Creating Like");
-            var exiting = await context.Likes.FirstOrDefaultAsync(x => x.PostId == dto.PostId && x.UserId == dto.UserId);
+            var exiting = await context.Likes.FirstOrDefaultAsync(x => x.PostId == dto.PostId && x.UserId == userId);
             if (exiting != null)
             {
                 return new Responce<string>(HttpStatusCode.BadRequest,"You are already liked this post");
@@ -26,13 +28,18 @@ public class LikeService(DataContext context) : ILikeService
             var like = new Like()
             {
                 PostId = dto.PostId,
-                UserId = dto.UserId,
+                UserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-            post.LikeCount += 1;
             await context.Likes.AddAsync(like);
+            
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Posts SET LikeCount = LikeCount + 1 WHERE Id = {0}", dto.PostId);
+            
             var  res = await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            
             return res > 0 
                 ? new Responce<string>(HttpStatusCode.OK, "Like created")
                 : new Responce<string>(HttpStatusCode.NotFound, "Error");
@@ -44,18 +51,24 @@ public class LikeService(DataContext context) : ILikeService
         }
     }
 
-    public async Task<Responce<string>> DeleteLike(int id)
+    public async Task<Responce<string>> DeleteLike(int id, int  userId)
     {
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             Log.Information("Deleting Like");
             var like = await context.Likes
                 .Include(x=> x.Post)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id &&  x.UserId == userId);
             if (like == null) return new Responce<string>(HttpStatusCode.NotFound, "Like not found");
             context.Likes.Remove(like);
-            like.Post.LikeCount -= 1;
+            
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Posts SET LikeCount = LikeCount - 1 WHERE Id = {0}", like.PostId);
+            
             var res = await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
             return res > 0
                 ? new Responce<string>(HttpStatusCode.OK, "Like deleted")
                 : new Responce<string>(HttpStatusCode.NotFound, "Error");
@@ -91,14 +104,18 @@ public class LikeService(DataContext context) : ILikeService
         }
     }
 
-    public async Task<Responce<List<GetLikeDto>>> GetLikes()
+    public async Task<Responce<List<GetLikeDto>>> GetLikes(LikeFilter filter)
     {
         try
         {
             Log.Information("Getting Likes");
-            var likes = await context.Likes.ToListAsync();
-            if(likes.Count == 0) return new Responce<List<GetLikeDto>>(HttpStatusCode.NotFound,"Like not found");
-            var dtos = likes.Select(x => new GetLikeDto()
+            var query = context.Likes.AsQueryable();
+            var total = await query.CountAsync();
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var like = await query.Skip(skip).Take(filter.PageSize).ToListAsync();
+            if(like.Count == 0) 
+                return new Responce<List<GetLikeDto>>(HttpStatusCode.NotFound,"Like not found");
+            var dtos = like.Select(x => new GetLikeDto()
             {
                 Id = x.Id,
                 PostId = x.PostId,
@@ -111,6 +128,32 @@ public class LikeService(DataContext context) : ILikeService
         catch (Exception e)
         {
             Log.Error("Error in GetLikes");
+            return new Responce<List<GetLikeDto>>(HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
+
+    public async Task<Responce<List<GetLikeDto>>> GetLikeByPostId(int postId)
+    {
+        try
+        {
+            Log.Information("Getting Likes by PostId");
+            var likes = await context.Likes
+                .Where(x => x.PostId == postId)
+                .OrderByDescending(x=> x.CreatedAt)
+                .ToListAsync();
+            var dtos = likes.Select(x=>  new GetLikeDto()
+            {
+                Id = x.Id,
+                PostId = x.PostId,
+                UserId = x.UserId,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            }).ToList();
+            return new Responce<List<GetLikeDto>>(dtos);
+        }
+        catch (Exception e)
+        {
+            Log.Error("Error in GetLikeByPostId");
             return new Responce<List<GetLikeDto>>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
