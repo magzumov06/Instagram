@@ -33,7 +33,7 @@ public class CommentService(DataContext context) : ICommentService
             await context.Comments.AddAsync(comment);
 
             await context.Database.ExecuteSqlRawAsync(
-                "UPDATE Posts SET CommentCount = CommentCount + 1 WHERE Id = {0}", post.Id);
+                "UPDATE \"Posts\" SET \"CommentCount\" = \"CommentCount\" + 1 WHERE \"Id\" = {0}", post.Id);
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -63,7 +63,7 @@ public class CommentService(DataContext context) : ICommentService
             context.Comments.Remove(comment);
 
             await context.Database.ExecuteSqlRawAsync(
-                "UPDATE Posts SET CommentCount = CommentCount - 1 WHERE Id = {0}", comment.PostId);
+                "UPDATE \"Posts\" SET \"CommentCount\" = \"CommentCount\" - 1 WHERE \"Id\" = {0}", comment.PostId);
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();

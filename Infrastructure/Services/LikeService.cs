@@ -34,8 +34,8 @@ public class LikeService(DataContext context) : ILikeService
             };
             await context.Likes.AddAsync(like);
             
-            await context.Database.ExecuteSqlRawAsync(
-                "UPDATE Posts SET LikeCount = LikeCount + 1 WHERE Id = {0}", dto.PostId);
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE \"Posts\" SET \"LikeCount\" = \"LikeCount\" + 1 WHERE \"Id\" = {dto.PostId}");
             
             var  res = await context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -64,7 +64,7 @@ public class LikeService(DataContext context) : ILikeService
             context.Likes.Remove(like);
             
             await context.Database.ExecuteSqlRawAsync(
-                "UPDATE Posts SET LikeCount = LikeCount - 1 WHERE Id = {0}", like.PostId);
+                "UPDATE \"Posts\" SET \"LikeCount\" = \"LikeCount\" - 1 WHERE \"Id\" = {0}", like.PostId);
             
             var res = await context.SaveChangesAsync();
             await transaction.CommitAsync();
