@@ -1,5 +1,6 @@
 ﻿using Domain.DTOs.TagDto;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controller;
@@ -8,6 +9,7 @@ namespace WebApp.Controller;
 public class TagController(ITagService service) :  ControllerBase
 {
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateTag(CreateTagDto dto)
     {
         var res = await service.CreateTagAsync(dto);
@@ -15,6 +17,7 @@ public class TagController(ITagService service) :  ControllerBase
     }
 
     [HttpPut]
+    [Authorize]
     public async Task<IActionResult> UpdateTag(UpdateTagDto dto)
     {
         var res = await service.UpdateTagAsync(dto);
@@ -22,6 +25,7 @@ public class TagController(ITagService service) :  ControllerBase
     }
 
     [HttpDelete]
+    [Authorize]
     public async Task<IActionResult> DeleteTag(int id)
     {
         var res = await service.DeleteTagAsync(id);
@@ -29,6 +33,7 @@ public class TagController(ITagService service) :  ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetTag(int id)
     {
         var res = await service.GetTagAsync(id);

@@ -1,5 +1,7 @@
-﻿using Domain.DTOs.FollowDto;
+﻿using System.Security.Claims;
+using Domain.DTOs.FollowDto;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controller;
@@ -9,20 +11,37 @@ namespace WebApp.Controller;
 public class FollowConteroller(IFollowService service) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateFollow(CreateFollowDto dto)
     {
-        var res = await service.CreateFollow(dto);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+       
+        var res = await service.CreateFollow(dto, userId);
         return StatusCode(res.StatusCode, res);
     }
 
     [HttpDelete]
+    [Authorize]
     public async Task<IActionResult> DeleteFollow(int id)
     {
-        var res = await service.DeleteFollow(id);
+        var  userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.DeleteFollow(id, userId);
         return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetFollow(int id)
     {
         var res = await service.GetFollow(id);
@@ -30,6 +49,7 @@ public class FollowConteroller(IFollowService service) : ControllerBase
     }
     
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetFollows()
     {
         var res = await service.GetFollows();

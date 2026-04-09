@@ -5,9 +5,9 @@ namespace Infrastructure.Interfaces;
 
 public interface IPostService
 {
-    Task<Responce<string>> CreatePostAsync(CreatePost post);
-    Task<Responce<string>> UpdatePost(UpdatePostDto post);
-    Task<Responce<string>> DeletePost(int id);
+    Task<Responce<string>> CreatePostAsync(CreatePost post, int userId);
+    Task<Responce<string>> UpdatePost(UpdatePostDto post, int userId);
+    Task<Responce<string>> DeletePost(int id, int userId);
     Task<Responce<GetPostDto>> GetPost(int id);
     Task<Responce<List<GetPostDto>>> GetPosts();
 }

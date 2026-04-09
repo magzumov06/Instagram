@@ -14,12 +14,12 @@ public class UserService(
     DataContext context,
     IFileStorage file) : IUserService
 {
-    public async Task<Responce<string>> UpdateUser(UpdateUserDto update)
+    public async Task<Responce<string>> UpdateUser(UpdateUserDto update, int userId)
     {
         try
         {
             Log.Information("Updating User");
-            var updateUser = await context.Users.FirstOrDefaultAsync(x => x.Id == update.Id);
+            var updateUser = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (updateUser == null) return new Responce<string>(HttpStatusCode.BadRequest,"User not found");
             if (update.AvatarUrl != null)
             {
@@ -47,12 +47,12 @@ public class UserService(
         }
     }
 
-    public async Task<Responce<string>> DeleteUser(int id)
+    public async Task<Responce<string>> DeleteUser(int  userId)
     {
         try
         {
             Log.Information("Deleting User");
-            var deleteUser = await context.Users.FirstOrDefaultAsync(x => x.Id == id);
+            var deleteUser = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (deleteUser == null) return new Responce<string>(HttpStatusCode.BadRequest,"User not found"); 
             deleteUser.IsDeleted = true;
             var res = await context.SaveChangesAsync();
@@ -67,12 +67,12 @@ public class UserService(
         }
     }
 
-    public async Task<Responce<GetUserDto>> GetUser(int id)
+    public async Task<Responce<GetUserDto>> GetUser(int userId)
     {
         try
         {
             Log.Information("Getting User");
-            var getUser = await context.Users.FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == false);
+            var getUser = await context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.IsDeleted == false);
             if (getUser == null) return new Responce<GetUserDto>(HttpStatusCode.BadRequest,"User not found");
             var dto = new GetUserDto
             {

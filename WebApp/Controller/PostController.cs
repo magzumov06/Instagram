@@ -1,5 +1,7 @@
-﻿using Domain.DTOs.PostDto;
+﻿using System.Security.Claims;
+using Domain.DTOs.PostDto;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controller;
@@ -9,27 +11,52 @@ namespace WebApp.Controller;
 public class PostController(IPostService service) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreatePost([FromForm] CreatePost dto)
     {
-        var res = await service.CreatePostAsync(dto);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.CreatePostAsync(dto, userId);
         return StatusCode(res.StatusCode, res);
     }
 
     [HttpPut]
+    [Authorize]
     public async Task<IActionResult> Update([FromForm] UpdatePostDto dto)
     {
-        var res = await service.UpdatePost(dto);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var  userId = int.Parse(userClaim);
+        
+        var res = await service.UpdatePost(dto, userId);
         return StatusCode(res.StatusCode, res);
     }
     
     [HttpDelete]
+    [Authorize]
     public async Task<IActionResult> DeletePost(int id)
     {
-        var res = await service.DeletePost(id);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.DeletePost(id, userId);
         return StatusCode(res.StatusCode, res);
     }
     
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetPost(int id)
     {
         var res = await service.GetPost(id);
@@ -37,6 +64,7 @@ public class PostController(IPostService service) : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetPosts()
     {
         var res = await service.GetPosts();

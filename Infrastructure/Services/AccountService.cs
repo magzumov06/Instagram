@@ -15,7 +15,6 @@ namespace Infrastructure.Services;
 
 public class AccountService(
     UserManager<User> userManager,
-    IHttpContextAccessor httpContextAccessor,
     IConfiguration configuration,
     IEmailService emailService,
     IFileStorage file
@@ -80,9 +79,28 @@ public class AccountService(
             var user = await userManager.FindByNameAsync(login.Username);
             if(user == null)
                 return new Responce<string>(HttpStatusCode.Unauthorized,"UserName or Password is incorrect");
+            if (await userManager.IsLockedOutAsync(user))
+            {
+                var lokEnd = await userManager.GetLockoutEndDateAsync(user);
+                var remaining = lokEnd.Value.UtcDateTime -  DateTime.UtcNow;
+                return new Responce<string>(
+                    HttpStatusCode.Unauthorized, 
+                    $"Account locked.Try again in {remaining.Minutes} minutes and {remaining.Seconds} seconds");
+            }
+            
             var isPasswordCorrect = await userManager.CheckPasswordAsync(user, login.Password);
-            if(!isPasswordCorrect)
-                return new Responce<string>(HttpStatusCode.Unauthorized,"UserName or Password is incorrect");
+            if (!isPasswordCorrect)
+            {
+                await userManager.AccessFailedAsync(user);
+                int attemptsLeft = 5 - await userManager.GetAccessFailedCountAsync(user);
+                string message = attemptsLeft > 0
+                    ? $"Incorrect password. {attemptsLeft} attempts left."
+                    : "Account locked due to too many failed attempts.";
+                return new Responce<string>(HttpStatusCode.Unauthorized, message);
+            }
+            
+            await userManager.ResetAccessFailedCountAsync(user);
+            
             var token = await GenerateJwtTokenHelper.GenerateJwtToken(user, userManager, configuration);
             return new Responce<string>(token) {Message = "Welcome to Instagram"};
         }

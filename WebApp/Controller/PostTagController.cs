@@ -1,5 +1,6 @@
 ﻿using Domain.DTOs.PostTag;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controller;
@@ -8,6 +9,7 @@ namespace WebApp.Controller;
 public class PostTagController(IPostTagService service) : ControllerBase
 {
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create(CreatePostTag postTag)
     {
         var res = await service.CreatePostTag(postTag);
@@ -15,6 +17,7 @@ public class PostTagController(IPostTagService service) : ControllerBase
     }
 
     [HttpDelete]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         var res = await service.DeletePostTag(id);
@@ -22,6 +25,7 @@ public class PostTagController(IPostTagService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> Get(int id)
     {
         var res = await service.GetPostTag(id);

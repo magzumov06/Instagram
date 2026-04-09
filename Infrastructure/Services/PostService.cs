@@ -14,14 +14,14 @@ public class PostService(
     DataContext context,
     IFileStorage file) : IPostService
 {
-    public async Task<Responce<string>> CreatePostAsync(CreatePost post)
+    public async Task<Responce<string>> CreatePostAsync(CreatePost post, int userId)
     {
         try
         {
             Log.Information("Creating Post");
             var newPost = new Post()
             {
-                UserId = post.UserId,
+                UserId = userId,
                 Content = post.Content,
                 LikeCount = 0,
                 CommentCount = 0,
@@ -45,12 +45,12 @@ public class PostService(
         }
     }
 
-    public async Task<Responce<string>> UpdatePost(UpdatePostDto post)
+    public async Task<Responce<string>> UpdatePost(UpdatePostDto post, int userId)
     {
         try
         {
             Log.Information("Updating Post");
-            var update = await context.Posts.FirstOrDefaultAsync(x=>x.Id == post.Id);
+            var update = await context.Posts.FirstOrDefaultAsync(x=>x.Id == post.Id && x.UserId == userId);
             if (update == null) return new Responce<string>(HttpStatusCode.NotFound,"Post not found");
             if (post.ImagePath != null)
             {
@@ -74,12 +74,12 @@ public class PostService(
         }
     }
 
-    public async Task<Responce<string>> DeletePost(int id)
+    public async Task<Responce<string>> DeletePost(int id, int  userId)
     {
         try
         {
             Log.Information("Deleting Post");
-            var delete = await context.Posts.FirstOrDefaultAsync(x => x.Id == id);
+            var delete = await context.Posts.FirstOrDefaultAsync(x => x.Id == id &&  x.UserId == userId);
             if (delete == null) return new Responce<string>(HttpStatusCode.NotFound,"Post not found");
             context.Posts.Remove(delete);
             var res = await context.SaveChangesAsync();

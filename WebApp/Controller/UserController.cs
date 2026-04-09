@@ -1,6 +1,8 @@
-﻿using Domain.DTOs.UserDto;
+﻿using System.Security.Claims;
+using Domain.DTOs.UserDto;
 using Domain.Filters;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controller;
@@ -10,20 +12,37 @@ namespace WebApp.Controller;
 public class UserController(IUserService service) : ControllerBase
 {
     [HttpPut]
+    [Authorize]
     public async Task<IActionResult> Put([FromForm] UpdateUserDto updateUserDto)
     {
-        var res = await service.UpdateUser(updateUserDto);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.UpdateUser(updateUserDto, userId);
         return StatusCode(res.StatusCode, res);
     }
     
     [HttpDelete]
-    public async Task<IActionResult> DeleteUser(int id)
+    [Authorize]
+    public async Task<IActionResult> DeleteUser()
     {
-        var res = await service.DeleteUser(id);
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.DeleteUser(userId);
         return StatusCode(res.StatusCode, res);
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetUsers([FromQuery] UserFilter filter)
     {
         var res = await service.GetUsers(filter);
@@ -31,9 +50,17 @@ public class UserController(IUserService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetUser(int id)
+    [Authorize]
+    public async Task<IActionResult> GetUser()
     {
-        var res = await service.GetUser(id);
+        var  userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.GetUser(userId);
         return Ok(res);
     }
 }

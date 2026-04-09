@@ -11,25 +11,30 @@ namespace Infrastructure.Services;
 
 public class FollowService(DataContext context) :  IFollowService
 {
-   public async Task<Responce<string>> CreateFollow(CreateFollowDto follow)
+   public async Task<Responce<string>> CreateFollow(CreateFollowDto follow, int  userId)
 {
     await using var transaction = await context.Database.BeginTransactionAsync();
     try
     {
         Log.Information("Creating Follow");
         var userToFollow = await context.Users.FirstOrDefaultAsync(u => u.Id == follow.FollowingId);
+        
         if (userToFollow == null)
             return new Responce<string>(HttpStatusCode.NotFound, "User to follow not found");
 
         var existingFollow = await context.Follows
-            .FirstOrDefaultAsync(f => f.FollowingId == follow.FollowingId && f.FollowerId == follow.FollowerId);
+            .FirstOrDefaultAsync(f => f.FollowingId == follow.FollowingId && f.FollowerId == userId);
+        
+        if (follow.FollowingId == userId)
+            return new Responce<string>(HttpStatusCode.BadRequest, "You cannot follow yourself");
+        
         if (existingFollow != null)
             return new Responce<string>(HttpStatusCode.BadRequest, "You already follow this user");
 
         var newFollow = new Follow
         {
             FollowingId = follow.FollowingId,
-            FollowerId = follow.FollowerId,
+            FollowerId = userId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -51,14 +56,14 @@ public class FollowService(DataContext context) :  IFollowService
     }
 }
 
-public async Task<Responce<string>> DeleteFollow(int id)
+public async Task<Responce<string>> DeleteFollow(int id, int userId)
 {
     await using var transaction = await context.Database.BeginTransactionAsync();
     try
     {
         Log.Information("Deleting Follow");
 
-        var follow = await context.Follows.FirstOrDefaultAsync(f => f.Id == id);
+        var follow = await context.Follows.FirstOrDefaultAsync(f => f.Id == id && f.FollowerId == userId);
         if (follow == null)
             return new Responce<string>(HttpStatusCode.NotFound, "Follow not found");
 
