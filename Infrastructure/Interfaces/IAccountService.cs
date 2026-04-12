@@ -7,4 +7,6 @@ public interface IAccountService
 {
     Task<Responce<string>> Register(Register register);
     Task<Responce<string>> Login(Login login);
+    Task<Responce<string>> ChangePassword(ChangePassword changePassword, int userId);
+
 }
