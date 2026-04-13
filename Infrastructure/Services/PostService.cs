@@ -121,6 +121,33 @@ public class PostService(
         }
     }
 
+    public async Task<Responce<List<GetPostDto>>> GetPostsByUserId(int userId)
+    {
+        try
+        {
+            var posts = await context.Posts.Where(x => x.UserId == userId).ToListAsync();
+            
+            if(posts.Count == 0)
+                return new Responce<List<GetPostDto>>(HttpStatusCode.NotFound,"Post not found");
+            
+            var dtos  = posts.Select(x => new GetPostDto()
+            {
+                Id = x.Id,
+                UserId = x.UserId,
+                Content = x.Content,
+                LikeCount = x.LikeCount,
+                CommentCount = x.CommentCount,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            }).ToList();
+            return new Responce<List<GetPostDto>>(dtos);
+        }
+        catch (Exception e)
+        {
+            return new Responce<List<GetPostDto>>(HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
+
     public async Task<Responce<List<GetPostDto>>> GetPosts()
     {
         try

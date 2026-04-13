@@ -42,6 +42,14 @@ public class LikeController(ILikeService service) : ControllerBase
         return StatusCode(res.StatusCode, res);
     }
 
+    [HttpGet("users/{userId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetLikesByUserId(int userId)
+    {
+        var res = await service.GetLikesByUserId(userId);
+        return StatusCode(res.StatusCode, res);
+    }
+
     [HttpGet("posts/{postId}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetPostLike(int postId)

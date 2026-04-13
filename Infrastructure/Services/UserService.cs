@@ -96,6 +96,34 @@ public class UserService(
         }
     }
 
+    public async Task<Responce<GetUserDto>> GetUserById(int id)
+    {
+        try
+        {
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null) 
+                return new Responce<GetUserDto>(HttpStatusCode.BadRequest,"User not found");
+            var dto = new GetUserDto()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Username = user.UserName,
+                Age = user.Age,
+                PhoneNumber = user.PhoneNumber,
+                AvatarUrl = user.AvatarUrl,
+                FollowingCount = user.FollowingCount,
+                CreatedAt = user.CreatedAt,
+                UpdateAt = user.UpdateAt
+            };
+            return new Responce<GetUserDto>(dto);
+        }
+        catch (Exception e)
+        {
+            return new Responce<GetUserDto>(HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
+
     public async Task<PaginationResponce<List<GetUserDto>>> GetUsers(UserFilter filter)
     {
         try

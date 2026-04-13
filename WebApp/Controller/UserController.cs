@@ -50,6 +50,15 @@ public class UserController(IUserService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetUserById(int id)
+    {
+        var res = await service.GetUserById(id);
+        return StatusCode(res.StatusCode, res);
+    }
+    
+    
+    [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetUser()
     {
@@ -61,6 +70,6 @@ public class UserController(IUserService service) : ControllerBase
         var userId = int.Parse(userClaim);
         
         var res = await service.GetUser(userId);
-        return Ok(res);
+        return StatusCode(res.StatusCode, res);
     }
 }

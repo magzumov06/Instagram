@@ -11,4 +11,5 @@ public interface ILikeService
     Task<Responce<GetLikeDto>> GetLike(int id);
     Task<Responce<List<GetLikeDto>>> GetLikes(LikeFilter filter);
     Task<Responce<List<GetLikeDto>>> GetLikeByPostId(int  postId);
+    Task<Responce<List<GetLikeDto>>> GetLikesByUserId(int userId);
 }

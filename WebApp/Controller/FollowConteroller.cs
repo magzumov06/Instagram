@@ -48,6 +48,22 @@ public class FollowConteroller(IFollowService service) : ControllerBase
         return StatusCode(res.StatusCode, res);
     }
     
+    [HttpGet("users/{id}/followers")]
+    [Authorize]
+    public async Task<IActionResult> GetFollowers(int id)
+    {
+        var res = await service.GetFollowers(id);
+        return StatusCode(res.StatusCode, res);
+    }
+
+    [HttpGet("users/{id}/following")]
+    [Authorize]
+    public async Task<IActionResult> GetFollowing(int id)
+    {
+        var res = await service.GetFollowing(id);
+        return StatusCode(res.StatusCode, res);
+    }
+    
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetFollows()

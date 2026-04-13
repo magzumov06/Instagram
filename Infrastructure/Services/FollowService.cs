@@ -114,22 +114,78 @@ public async Task<Responce<string>> DeleteFollow(int id, int userId)
         try
         {
             Log.Information("Getting follows");
-            var follows = await context.Follows.ToListAsync();
-            if(follows.Count == 0) return new Responce<List<GetFollowDto>>(HttpStatusCode.NotFound, "Follows not found");
-            var dtos = follows.Select(x=> new GetFollowDto()
-            {
-                Id = x.Id,
-                FollowingId = x.FollowingId,
-                FollowerId = x.FollowerId,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-            }).ToList();
+
+            var dtos = await context.Follows
+                .Select(x => new GetFollowDto()
+                {
+                    Id = x.Id,
+                    FollowingId = x.FollowingId,
+                    FollowerId = x.FollowerId,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                })
+                .ToListAsync();
+
             return new Responce<List<GetFollowDto>>(dtos);
         }
         catch (Exception e)
         {
-            Log.Error("Error in GetFollows");
-            return new Responce<List<GetFollowDto>>(HttpStatusCode.InternalServerError, e.Message);
+            Log.Error(e, "Error in GetFollows");
+            return new Responce<List<GetFollowDto>>(HttpStatusCode.InternalServerError, "Internal server error");
+        }
+    }
+    
+    public async Task<Responce<List<GetFollowDto>>> GetFollowers(int userId)
+    {
+        try
+        {
+            Log.Information("Getting followers for user {UserId}", userId);
+
+            var followers = await context.Follows
+                .Where(x => x.FollowingId == userId)
+                .Select(x => new GetFollowDto()
+                {
+                    Id = x.Id,
+                    FollowerId = x.FollowerId,
+                    FollowingId = x.FollowingId,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                })
+                .ToListAsync();
+
+            return new Responce<List<GetFollowDto>>(followers);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetFollowers");
+            return new Responce<List<GetFollowDto>>(HttpStatusCode.InternalServerError, "Internal server error");
+        }
+    }
+    
+    public async Task<Responce<List<GetFollowDto>>> GetFollowing(int userId)
+    {
+        try
+        {
+            Log.Information("Getting following for user {UserId}", userId);
+
+            var following = await context.Follows
+                .Where(x => x.FollowerId == userId)
+                .Select(x => new GetFollowDto()
+                {
+                    Id = x.Id,
+                    FollowerId = x.FollowerId,
+                    FollowingId = x.FollowingId,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                })
+                .ToListAsync();
+
+            return new Responce<List<GetFollowDto>>(following);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error in GetFollowing");
+            return new Responce<List<GetFollowDto>>(HttpStatusCode.InternalServerError, "Internal server error");
         }
     }
 }

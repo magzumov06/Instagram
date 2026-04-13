@@ -70,4 +70,19 @@ public class PostController(IPostService service) : ControllerBase
         var res = await service.GetPosts();
         return StatusCode(res.StatusCode, res);
     }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetPostByUserId()
+    {
+        var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userClaim == null)
+            return Unauthorized("User not authorized");
+        
+        var userId = int.Parse(userClaim);
+        
+        var res = await service.GetPost(userId);
+        return StatusCode(res.StatusCode, res);
+    }
 }
