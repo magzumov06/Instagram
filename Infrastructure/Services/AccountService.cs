@@ -6,7 +6,6 @@ using Domain.Responces;
 using Infrastructure.FileStorage;
 using Infrastructure.Helper;
 using Infrastructure.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -77,8 +76,14 @@ public class AccountService(
         {
             Log.Information("Logining new user");
             var user = await userManager.FindByNameAsync(login.Username);
-            if(user == null)
-                return new Responce<string>(HttpStatusCode.Unauthorized,"UserName or Password is incorrect");
+            switch (user)
+            {
+                case { IsDeleted: true }:
+                    return new Responce<string>(HttpStatusCode.BadRequest,"User not found");
+                case null:
+                    return new Responce<string>(HttpStatusCode.Unauthorized,"UserName or Password is incorrect");
+            }
+
             if (await userManager.IsLockedOutAsync(user))
             {
                 var lokEnd = await userManager.GetLockoutEndDateAsync(user);

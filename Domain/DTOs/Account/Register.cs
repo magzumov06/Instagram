@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Domain.Validations;
 using Microsoft.AspNetCore.Http;
 
 namespace Domain.DTOs.Account;
@@ -18,5 +19,7 @@ public class Register
     [EmailAddress]
     public required string Email { get; set; }
     public string? Address { get; set; }
+    [ImageValidation(2)]
     public IFormFile? AvatarUrl { get; set; }
 }
+
